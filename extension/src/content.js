@@ -5,8 +5,6 @@ import {
   makeid,
   extractHostname
 } from './utils';
-import config from './config';
-import axios from 'axios';
 import BigNumber from 'bignumber.js';
 BigNumber.config({ DECIMAL_PLACES: 6 });
 
@@ -26,11 +24,9 @@ script.onload = function() {
 // Listen to monetization progress event
 // sent by our injected file
 document.addEventListener('paytrackr_monetizationprogress', async e => {
-  const [history, hostnames, alerts, xrpPriceInUSD] = await Promise.all([
+  const [history, hostnames] = await Promise.all([
     getRecords('paytrackr_history'),
-    getRecords('paytrackr_hostnames'),
-    getRecords('paytrackr_alerts'),
-    getRecords('paytrackr_xrp_in_usd')
+    getRecords('paytrackr_hostnames')
   ]);
 
   const { amount, assetScale, assetCode } = e.detail;
@@ -69,33 +65,4 @@ document.addEventListener('paytrackr_monetizationprogress', async e => {
   }
 
   setRecords('paytrackr_hostnames', hostnames);
-
-  let currentTotal = 0;
-  hostnames.forEach(host => {
-    if (host.assetCode === 'XRP') {
-      currentTotal = new BigNumber(currentTotal, 10)
-        .plus((host.total * xrpPriceInUSD).toFixed(6))
-        .toNumber();
-    } else {
-      currentTotal = new BigNumber(currentTotal, 10)
-        .plus(host.total)
-        .toNumber();
-    }
-  });
-
-  // Send alerts
-  const activeAlerts = alerts.filter(i => !i.done);
-  activeAlerts.forEach(alert => {
-    if (currentTotal >= alert.amount) {
-      const alertIdx = alerts.findIndex(i => i.id === alert.id);
-      alerts[alertIdx].done = true;
-      console.log('Sending alert for amount ', alert.amount);
-      axios.post(`${config.apiUrl}/sendmail`, {
-        email: alert.email,
-        amount: alert.amount
-      });
-    }
-  });
-
-  setRecords('paytrackr_alerts', alerts);
 });

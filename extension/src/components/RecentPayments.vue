@@ -100,42 +100,43 @@ export default {
       console.log(e);
     }
     this.loading = false;
-    this.listenToChanges();
+    this.$browser.storage.onChanged.addListener(this.onChangeListener);
+  },
+  beforeDestroy() {
+    this.$browser.storage.onChanged.removeListener(this.onChangeListener);
   },
   methods: {
-    listenToChanges() {
-      this.$browser.storage.onChanged.addListener(changes => {
-        if (changes['paytrackr_history']) {
-          const newValue = changes['paytrackr_history'].newValue;
-          const oldValue = changes['paytrackr_history'].oldValue;
+    onChangeListener(changes) {
+      if (changes['paytrackr_history']) {
+        const newValue = changes['paytrackr_history'].newValue;
+        const oldValue = changes['paytrackr_history'].oldValue;
 
-          if (!newValue.length) {
-            this.items = [];
-            this.initialItems = [];
-            this.page = 1;
-            this.showLoadMore = false;
-            return;
-          }
-
-          if (!this.items.length) {
-            this.items = newValue;
-            return;
-          }
-
-          const newItems = [];
-
-          for (var i = 0; i < newValue.length; i++) {
-            const item = oldValue.find(x => x.id === newValue[i].id);
-            if (item) {
-              break;
-            }
-
-            newItems.push(newValue[i]);
-          }
-
-          this.items = [...newItems, ...this.items];
+        if (!newValue.length) {
+          this.items = [];
+          this.initialItems = [];
+          this.page = 1;
+          this.showLoadMore = false;
+          return;
         }
-      });
+
+        if (!this.items.length) {
+          this.items = newValue;
+          return;
+        }
+
+        const newItems = [];
+
+        for (var i = 0; i < newValue.length; i++) {
+          const item = oldValue.find(x => x.id === newValue[i].id);
+          if (item) {
+            break;
+          }
+
+          newItems.push(newValue[i]);
+        }
+
+        this.items = [...newItems, ...this.items];
+      }
     },
     paginate(array, page_size, page_number) {
       return array.slice(

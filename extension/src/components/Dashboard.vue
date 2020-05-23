@@ -152,15 +152,16 @@ export default {
       console.log(e);
     }
     this.loading = false;
-    this.listenToChanges();
+    this.$browser.storage.onChanged.addListener(this.onChangeListener);
+  },
+  beforeDestroy() {
+    this.$browser.storage.onChanged.removeListener(this.onChangeListener);
   },
   methods: {
-    listenToChanges() {
-      this.$browser.storage.onChanged.addListener(changes => {
-        if (changes['paytrackr_hostnames']) {
-          this.items = changes['paytrackr_hostnames'].newValue;
-        }
-      });
+    onChangeListener(changes) {
+      if (changes['paytrackr_hostnames']) {
+        this.items = changes['paytrackr_hostnames'].newValue;
+      }
     },
     convertCurrency(amount, assetCode) {
       let newAmount;

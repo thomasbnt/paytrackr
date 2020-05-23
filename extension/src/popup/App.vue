@@ -132,13 +132,17 @@ export default {
     }
     this.xrpInUSD = price;
 
-    this.$browser.storage.onChanged.addListener(changes => {
+    this.$browser.storage.onChanged.addListener(this.onChangeListener);
+  },
+  beforeDestroy() {
+    this.$browser.storage.onChanged.removeListener(this.onChangeListener);
+  },
+  methods: {
+    onChangeListener(changes) {
       if (changes['paytrackr_xrp_in_usd']) {
         this.xrpInUSD = changes['paytrackr_xrp_in_usd'].newValue;
       }
-    });
-  },
-  methods: {
+    },
     async changeTheme() {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
       await setRecords(

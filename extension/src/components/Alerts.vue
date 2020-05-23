@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-list three-line subheader v-if="items.length">
+    <v-list two-line subheader v-if="items.length">
       <v-subheader>Payment Alerts</v-subheader>
       <template v-for="(i, idx) in items">
         <v-divider inset :key="idx" v-if="idx !== 0"></v-divider>
@@ -11,7 +11,7 @@
 
           <v-list-item-content>
             <v-list-item-title v-text="`$${i.amount} USD`"></v-list-item-title>
-            <v-list-item-subtitle v-text="i.email"></v-list-item-subtitle>
+            <!-- <v-list-item-subtitle v-text="i.email"></v-list-item-subtitle> -->
             <v-list-item-subtitle
               >Added on {{ i.date | filterDate }}</v-list-item-subtitle
             >
@@ -52,14 +52,7 @@
             type="number"
             v-model.number="amount"
             prepend-icon="mdi-currency-usd"
-            :error-messages="amountErrors"
-          ></v-text-field>
-          <v-text-field
-            prepend-icon="mdi-email"
-            label="Email"
-            type="email"
-            v-model="email"
-            :error-messages="emailErrors"
+            :error-messages="errors"
           ></v-text-field>
         </v-card-text>
         <v-card-actions>
@@ -78,7 +71,7 @@
 </template>
 
 <script>
-import { setRecords, getRecords, validateEmail } from '../utils';
+import { setRecords, getRecords } from '../utils';
 import BigNumber from 'bignumber.js';
 BigNumber.config({ DECIMAL_PLACES: 6 });
 
@@ -86,27 +79,20 @@ export default {
   data: () => ({
     newAlertDialog: false,
     amount: 0,
-    email: null,
     items: [],
     snackbar: false,
     snackbarText: null,
-    amountErrors: [],
-    emailErrors: []
+    errors: []
   }),
   async mounted() {
     this.items = await getRecords('paytrackr_alerts');
   },
   methods: {
     async validate() {
-      this.amountErrors = [];
-      this.emailErrors = [];
-
-      if (!this.email) {
-        this.emailErrors.push('Email is required');
-      }
+      this.errors = [];
 
       if (!this.amount) {
-        this.amountErrors.push('Amount is required');
+        this.errors.push('Amount is required');
       }
 
       const [hostnames, xrpPriceInUSD] = await Promise.all([
@@ -126,16 +112,12 @@ export default {
             .toNumber();
         }
       });
-      console.log(currentTotal);
-      if (this.email && !validateEmail(this.email)) {
-        this.emailErrors.push('Email is invalid');
-      }
 
       if (this.amount && currentTotal > this.amount) {
-        this.amountErrors.push('Amount must be greater than total payments');
+        this.errors.push('Amount must be greater than total payments');
       }
 
-      if (this.amountErrors.length || this.emailErrors.length) {
+      if (this.errors.length) {
         return false;
       }
 
@@ -143,14 +125,12 @@ export default {
     },
     async save() {
       const passed = await this.validate();
-      console.log(passed);
       if (!passed) {
         return;
       }
 
       this.items.unshift({
         date: Date.now(),
-        email: this.email,
         amount: this.amount,
         done: false
       });
@@ -170,9 +150,7 @@ export default {
   watch: {
     newAlertDialog(val) {
       if (!val) {
-        this.emailErrors = [];
-        this.amountErrors = [];
-        this.email = null;
+        this.errors = [];
         this.amount = 0;
       }
     }
