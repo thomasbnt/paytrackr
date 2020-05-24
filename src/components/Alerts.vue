@@ -12,15 +12,13 @@
           <v-list-item-content>
             <v-list-item-title v-text="`$${i.amount} USD`"></v-list-item-title>
             <!-- <v-list-item-subtitle v-text="i.email"></v-list-item-subtitle> -->
-            <v-list-item-subtitle
-              >Added on {{ i.date | filterDate }}</v-list-item-subtitle
-            >
+            <v-list-item-subtitle>Added on {{ i.date | filterDate }}</v-list-item-subtitle>
           </v-list-item-content>
 
           <v-list-item-action>
             <v-menu bottom left>
-              <template v-slot:activator="{ on }"
-                ><v-btn v-on="on" icon>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" icon>
                   <v-icon>mdi-dots-vertical</v-icon>
                 </v-btn>
               </template>
@@ -37,15 +35,13 @@
     <tab-placeholder v-else>
       <h4>No alerts found.</h4>
       <p>
-        Create an alert now to receive updates when <br />
-        your total payments reached your budget!
+        Create an alert now to receive updates when
+        <br />your total payments reached your budget!
       </p>
     </tab-placeholder>
     <v-dialog v-model="newAlertDialog">
       <v-card>
-        <v-card-title>
-          New Alert
-        </v-card-title>
+        <v-card-title>New Alert</v-card-title>
         <v-card-text>
           <v-text-field
             label="Amount"
@@ -64,9 +60,7 @@
     <v-btn fixed fab bottom right @click="newAlertDialog = true">
       <v-icon>mdi-plus</v-icon>
     </v-btn>
-    <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
-    </v-snackbar>
+    <v-snackbar v-model="snackbar">{{ snackbarText }}</v-snackbar>
   </div>
 </template>
 
@@ -134,7 +128,10 @@ export default {
         amount: this.amount,
         done: false
       });
-      await setRecords('paytrackr_alerts', this.items);
+      await setRecords(
+        'paytrackr_alerts',
+        JSON.parse(JSON.stringify(this.items))
+      );
       this.snackbarText = 'Alert saved';
       this.snackbar = true;
       this.newAlertDialog = false;
@@ -142,7 +139,10 @@ export default {
     async deleteAlert(item) {
       const idx = this.items.findIndex(i => i.date === item.date);
       this.items.splice(idx, 1);
-      await setRecords('paytrackr_alerts', this.items);
+      await setRecords(
+        'paytrackr_alerts',
+        JSON.parse(JSON.stringify(this.items))
+      );
       this.snackbarText = 'Alert deleted';
       this.snackbar = true;
     }

@@ -1,6 +1,6 @@
 {
   "name": "paytrackr",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "description": "Track and manage your micropayments into one place 🎉",
   "author": "Robert Soriano",
   "license": "MIT",
@@ -21,10 +21,12 @@
     "bignumber.js": "^9.0.0",
     "chart.js": "^2.9.3",
     "dayjs": "^1.8.27",
+    "file-saver": "^2.0.2",
     "vue": "^2.6.10",
     "vue-chartjs": "^3.5.0",
     "vuetify": "^2.2.29",
-    "webextension-polyfill": "^0.6.0"
+    "webextension-polyfill": "^0.6.0",
+    "xlsx": "^0.16.1"
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",

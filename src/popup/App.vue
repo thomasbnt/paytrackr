@@ -7,14 +7,17 @@
         <v-icon>mdi-theme-light-dark</v-icon>
       </v-btn>
       <v-menu>
-        <template v-slot:activator="{ on }"
-          ><v-btn v-on="on" icon>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" icon>
             <v-icon>mdi-dots-vertical</v-icon>
           </v-btn>
         </template>
         <v-list>
           <v-list-item @click="resetDataDialog = true">
             <v-list-item-title>Reset Data</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="exportDialog = true">
+            <v-list-item-title>Export History</v-list-item-title>
           </v-list-item>
           <v-list-item @click="aboutDialog = true">
             <v-list-item-title>About PayTrackr</v-list-item-title>
@@ -23,9 +26,7 @@
       </v-menu>
       <template v-slot:extension>
         <v-tabs v-model="tab" centered>
-          <v-tab v-for="item in items" :key="item">
-            {{ item }}
-          </v-tab>
+          <v-tab v-for="item in items" :key="item">{{ item }}</v-tab>
         </v-tabs>
       </template>
     </v-app-bar>
@@ -47,12 +48,11 @@
     <!-- Dialog -->
     <v-dialog v-model="resetDataDialog">
       <v-card>
-        <v-card-title>
-          Are you sure?
-        </v-card-title>
-        <v-card-text>
-          This will reset all payments back to 0 and clear all alerts.
-        </v-card-text>
+        <v-card-title>Are you sure?</v-card-title>
+        <v-card-text
+          >This will reset all payments back to 0 and clear all
+          alerts.</v-card-text
+        >
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text @click="resetDataDialog = false">Cancel</v-btn>
@@ -63,7 +63,7 @@
     <!-- Dialog -->
     <v-dialog v-model="aboutDialog">
       <v-card>
-        <v-card-title> PayTrackr {{ manifestVal.version }} </v-card-title>
+        <v-card-title>PayTrackr {{ manifestVal.version }}</v-card-title>
         <v-card-text>
           <p v-text="manifestVal.description"></p>
           <v-list>
@@ -89,10 +89,24 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!-- Dialog -->
+    <v-dialog v-model="exportDialog">
+      <v-card>
+        <v-card-title>Export History</v-card-title>
+        <v-card-text>
+          <v-radio-group v-model="type" :mandatory="true">
+            <v-radio label="XLSX" value="xlsx"></v-radio>
+            <v-radio label="CSV" value="csv"></v-radio>
+          </v-radio-group>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="exportData">Export</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <!-- Snackbar -->
-    <v-snackbar v-model="snackbar">
-      {{ snackbarText }}
-    </v-snackbar>
+    <v-snackbar v-model="snackbar">{{ snackbarText }}</v-snackbar>
   </v-app>
 </template>
 
@@ -102,6 +116,8 @@ import Dashboard from '../components/Dashboard';
 import RecentPayments from '../components/RecentPayments';
 import Alerts from '../components/Alerts';
 import manifest from '../manifest.json';
+import XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 export default {
   components: {
@@ -118,7 +134,9 @@ export default {
       resetDataDialog: false,
       snackbar: false,
       snackbarText: '',
-      aboutDialog: false
+      aboutDialog: false,
+      exportDialog: false,
+      type: 'xlsx'
     };
   },
   async created() {
@@ -160,6 +178,38 @@ export default {
       this.snackbarText = 'Cleared';
       this.snackbar = true;
       this.resetDataDialog = false;
+    },
+    async exportData() {
+      let data = await getRecords('paytrackr_history');
+      data = data.map(item => {
+        const obj = { ...item };
+        delete obj.id;
+        obj.date = this.$options.filters.filterDate(obj.date);
+        return obj;
+      });
+
+      if (this.type === 'xlsx') {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'PayTrackr History');
+        XLSX.writeFile(wb, `paytrackr_${Date.now()}.xlsx`);
+      } else {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const csv = XLSX.utils.sheet_to_csv(ws, { FS: ';' });
+
+        saveAs(
+          new Blob([this.s2ab(csv)], { type: 'application/octet-stream' }),
+          `paytrackr_${Date.now()}.csv`
+        );
+      }
+      this.exportDialog = false;
+      this.type = 'xlsx';
+    },
+    s2ab(s) {
+      var buf = new ArrayBuffer(s.length);
+      var view = new Uint8Array(buf);
+      for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xff;
+      return buf;
     }
   },
   watch: {

@@ -21,8 +21,7 @@ async function notify(title, message) {
       type: 'basic',
       title,
       message,
-      iconUrl: browser.extension.getURL('icons/icon_48.png'),
-      requireInteraction: true
+      iconUrl: browser.extension.getURL('icons/icon_48.png')
     });
   } catch (e) {
     console.log('Error from background.js', e);
