@@ -7,6 +7,28 @@
 - Chrome: Pending Review
 - Firefox: https://addons.mozilla.org/en-US/firefox/addon/paytrackr/
 
+## Features
+
+**Dashboard** - Aggregated breakdown on how much went to each site in total
+
+![Dashboard](https://i.imgur.com/AVSlipp.gif)
+
+**Recent Payments** - History of micropayments to websites with web monetization
+
+![Recent Payments](https://i.imgur.com/Ac3o28q.gif)
+
+**Payment Alerts** - Get notifications when a certain amount is reached
+
+![Payment Alerts](https://i.imgur.com/NcumuKe.gif)
+
+**Export History** - Export micropayments history to csv/xlsx
+
+![Export History](https://i.imgur.com/grIjHnt.gif)
+
+**Theme Switcher** - Choose between light and dark mode
+
+![Theme Switcher](https://i.imgur.com/TGfhOQj.gif)
+
 ## Usage
 
 ```bash
