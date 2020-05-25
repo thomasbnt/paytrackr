@@ -1,6 +1,6 @@
 {
   "name": "paytrackr",
-  "description": "Track and manage your micropayments into one place 🎉",
+  "description": "Track and manage your micropayments to web monetized websites having a web monetization provider membership (i.e. Coil).",
   "version": "0.0.7",
   "manifest_version": 2,
   "icons": {
