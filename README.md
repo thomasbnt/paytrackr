@@ -1,6 +1,6 @@
 # PayTrackr
 
-> Track and manage your micropayments into one place 🎉
+> PayTrackr is the easiest and safest way to track and manage your micropayments to web monetized websites having a web monetization provider membership (i.e. Coil).
 
 ## Download links
 
