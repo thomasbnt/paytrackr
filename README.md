@@ -2,6 +2,9 @@
 
 > Track and manage your micropayments into one place 🎉
 
+Chrome: Pending Review
+Firefox: https://addons.mozilla.org/en-US/firefox/addon/paytrackr/
+
 ## Usage
 
 ```bash
