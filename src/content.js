@@ -6,7 +6,7 @@ import {
   extractHostname
 } from './utils';
 import BigNumber from 'bignumber.js';
-BigNumber.config({ DECIMAL_PLACES: 6 });
+BigNumber.config({ DECIMAL_PLACES: 9 });
 
 // Inject to all tabs so we can track
 // monetization progress
@@ -31,7 +31,7 @@ document.addEventListener('paytrackr_monetizationprogress', async e => {
 
   const { amount, assetScale, assetCode } = e.detail;
   const scale = Math.pow(10, assetScale);
-  const newScaledAmount = new BigNumber(amount, 10).div(scale).toNumber();
+  const newScaledAmount = (new BigNumber(amount, 10).div(scale).toNumber()).toFixed(assetScale);
 
   const item = {
     ...e.detail,

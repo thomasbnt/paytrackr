@@ -67,7 +67,7 @@
 <script>
 import { setRecords, getRecords } from '../utils';
 import BigNumber from 'bignumber.js';
-BigNumber.config({ DECIMAL_PLACES: 6 });
+BigNumber.config({ DECIMAL_PLACES: 9 });
 
 export default {
   data: () => ({

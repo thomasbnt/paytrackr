@@ -5,18 +5,11 @@
         <v-card-title>
           <span v-text="`${total} ${showInXRP ? 'XRP' : 'USD'}`"></span>
           <v-spacer></v-spacer>
-          <v-btn text @click="showInXRP = !showInXRP"
-            >Show in {{ showInXRP ? 'USD' : 'XRP' }}</v-btn
-          >
+          <v-btn text @click="showInXRP = !showInXRP">Show in {{ showInXRP ? 'USD' : 'XRP' }}</v-btn>
         </v-card-title>
         <v-card-subtitle>Total Payments</v-card-subtitle>
         <v-card-text>
-          <Doughnut
-            v-if="!loading"
-            :options="options"
-            :chart-data="chartData"
-            :height="200"
-          />
+          <Doughnut v-if="!loading" :options="options" :chart-data="chartData" :height="200" />
         </v-card-text>
       </v-card>
     </div>
@@ -30,23 +23,25 @@
         <v-divider inset :key="idx" v-if="idx !== 0"></v-divider>
         <v-list-item :key="i.hostname">
           <v-list-item-avatar>
-            <v-icon :style="{ color: i.color }">{{
+            <v-icon :style="{ color: i.color }">
+              {{
               `mdi-alpha-${i.hostname.charAt(0)}-circle`
-            }}</v-icon>
+              }}
+            </v-icon>
           </v-list-item-avatar>
           <v-list-item-content>
             <v-list-item-title v-text="i.hostname"></v-list-item-title>
             <v-list-item-subtitle
               v-text="
-                `${convertCurrency(i.total, i.assetCode)} ${
+                `${convertCurrency(i.total, i.assetCode, i.assetScale)} ${
                   showInXRP ? 'XRP' : 'USD'
                 }`
               "
             ></v-list-item-subtitle>
-            <v-list-item-subtitle
-              >Last payment:
-              {{ i.lastUpdate | filterDate }}</v-list-item-subtitle
-            >
+            <v-list-item-subtitle>
+              Last payment:
+              {{ i.lastUpdate | filterDate }}
+            </v-list-item-subtitle>
           </v-list-item-content>
           <v-list-item-action>
             <v-btn
@@ -73,11 +68,7 @@
         </v-card-title>
         <v-card-text>
           <div class="d-flex justify-center" v-if="websiteInfoLoading">
-            <v-progress-circular
-              :size="50"
-              color="primary"
-              indeterminate
-            ></v-progress-circular>
+            <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
           </div>
           <v-list three-line>
             <template v-for="(value, name, idx) in websiteUrls">
@@ -87,16 +78,14 @@
                   <v-icon>mdi-contactless-payment</v-icon>
                 </v-list-item-avatar>
                 <v-list-item-content>
-                  <v-list-item-title
-                    v-text="`${value.total} ${value.assetCode}`"
-                  ></v-list-item-title>
+                  <v-list-item-title v-text="`${value.total} ${value.assetCode}`"></v-list-item-title>
                   <v-list-item-subtitle>
                     <a :href="name" target="_BLANK" v-text="name"></a>
                   </v-list-item-subtitle>
                   <v-list-item-subtitle>
                     Last payment:
-                    {{ value.lastUpdate | filterDate }}</v-list-item-subtitle
-                  >
+                    {{ value.lastUpdate | filterDate }}
+                  </v-list-item-subtitle>
                 </v-list-item-content>
               </v-list-item>
             </template>
@@ -111,7 +100,7 @@
 import Doughnut from '../components/Doughnut';
 import { getRecords } from '../utils';
 import BigNumber from 'bignumber.js';
-BigNumber.config({ DECIMAL_PLACES: 6 });
+BigNumber.config({ DECIMAL_PLACES: 9 });
 
 export default {
   props: ['xrpInUSD'],
@@ -163,12 +152,12 @@ export default {
         this.items = changes['paytrackr_hostnames'].newValue;
       }
     },
-    convertCurrency(amount, assetCode) {
+    convertCurrency(amount, assetCode, assetScale) {
       let newAmount;
       if (this.showInXRP && assetCode === 'USD') {
-        newAmount = (amount * (1 / this.xrpInUSD)).toFixed(6);
+        newAmount = (amount * (1 / this.xrpInUSD)).toFixed(assetScale);
       } else if (!this.showInXRP && assetCode === 'XRP') {
-        newAmount = (amount * this.xrpInUSD).toFixed(6);
+        newAmount = (amount * this.xrpInUSD).toFixed(assetScale);
       } else {
         newAmount = amount;
       }
@@ -184,9 +173,11 @@ export default {
         };
 
         if (this.showInXRP && item.assetCode === 'USD') {
-          newObj.total = (item.total * (1 / this.xrpInUSD)).toFixed(6);
+          newObj.total = (item.total * (1 / this.xrpInUSD)).toFixed(
+            item.assetScale
+          );
         } else if (!this.showInXRP && item.assetCode === 'XRP') {
-          newObj.total = (item.total * this.xrpInUSD).toFixed(6);
+          newObj.total = (item.total * this.xrpInUSD).toFixed(item.assetScale);
         }
 
         return newObj;
@@ -210,11 +201,11 @@ export default {
       this.items.forEach(item => {
         if (this.showInXRP && item.assetCode === 'USD') {
           total = new BigNumber(total, 10)
-            .plus((item.total * (1 / this.xrpInUSD)).toFixed(6))
+            .plus((item.total * (1 / this.xrpInUSD)).toFixed(item.assetScale))
             .toNumber();
         } else if (!this.showInXRP && item.assetCode === 'XRP') {
           total = new BigNumber(total, 10)
-            .plus((item.total * this.xrpInUSD).toFixed(6))
+            .plus((item.total * this.xrpInUSD).toFixed(item.assetScale))
             .toNumber();
         } else {
           total = new BigNumber(total, 10).plus(item.total).toNumber();

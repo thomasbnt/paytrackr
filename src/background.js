@@ -1,7 +1,7 @@
 import { setRecords, getRecords, getXRPinUSD } from './utils';
 import browser from 'webextension-polyfill';
 import BigNumber from 'bignumber.js';
-BigNumber.config({ DECIMAL_PLACES: 6 });
+BigNumber.config({ DECIMAL_PLACES: 9 });
 
 let XRPPriceInUSD;
 
