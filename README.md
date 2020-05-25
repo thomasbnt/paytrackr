@@ -2,6 +2,19 @@
 
 > Track and manage your micropayments into one place 🎉
 
+## Download links
+
+- Chrome: Pending Review
+- Firefox: https://addons.mozilla.org/en-US/firefox/addon/paytrackr/
+
+## Features
+
+- **Dashboard** - Aggregated breakdown on how much went to each site in total
+- **Recent Payments** - History of micropayments to websites with web monetization
+- **Payment Alerts** - Get notifications when a certain amount is reached
+- **Export History** - Export micropayments history to csv/xlsx
+- **Theme Switcher** - Choose between light and dark mode
+
 ## Usage
 
 ```bash
