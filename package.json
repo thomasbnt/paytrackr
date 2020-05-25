@@ -1,7 +1,7 @@
 {
   "name": "paytrackr",
   "version": "0.0.8",
-  "description": "Track and manage your micropayments to web monetized websites having a web monetization provider membership (i.e. Coil).",
+  "description": "Track and manage your micropayments to web monetized websites, having a web monetization provider membership (i.e. Coil).",
   "author": "Robert Soriano",
   "license": "MIT",
   "engines": {

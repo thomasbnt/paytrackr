@@ -7,6 +7,7 @@ import {
 } from './utils';
 import BigNumber from 'bignumber.js';
 BigNumber.config({ DECIMAL_PLACES: 9 });
+import browser from 'webextension-polyfill';
 
 // Inject to all tabs so we can track
 // monetization progress
@@ -65,4 +66,12 @@ document.addEventListener('paytrackr_monetizationprogress', async e => {
   }
 
   setRecords('paytrackr_hostnames', hostnames);
+});
+
+document.addEventListener('paytrackr_monetizationstart', e => {
+  browser.runtime.sendMessage('paytrackr_monetizationstart');
+});
+
+document.addEventListener('paytrackr_monetizationstop', e => {
+  browser.runtime.sendMessage('paytrackr_monetizationstop');
 });

@@ -66,3 +66,11 @@ browser.storage.onChanged.addListener(async changes => {
     setRecords('paytrackr_alerts', alerts);
   }
 });
+
+browser.runtime.onMessage.addListener((msg) => {
+  if (msg === 'paytrackr_monetizationstart') {
+    browser.browserAction.setBadgeText({text: '$'});
+  } else if (msg === 'paytrackr_monetizationstop') {
+    browser.browserAction.setBadgeText({text: ''});
+  }
+});
