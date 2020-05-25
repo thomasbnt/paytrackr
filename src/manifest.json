@@ -1,7 +1,7 @@
 {
   "name": "paytrackr",
   "description": "Track and manage your micropayments into one place 🎉",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "manifest_version": 2,
   "icons": {
     "48": "icons/icon_48.png",
