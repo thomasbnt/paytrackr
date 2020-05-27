@@ -14,7 +14,7 @@
         </template>
         <v-list>
           <v-list-item @click="resetDataDialog = true">
-            <v-list-item-title>Reset Data</v-list-item-title>
+            <v-list-item-title>Clear History</v-list-item-title>
           </v-list-item>
           <v-list-item @click="exportDialog = true">
             <v-list-item-title>Export History</v-list-item-title>
@@ -49,10 +49,10 @@
     <v-dialog v-model="resetDataDialog">
       <v-card>
         <v-card-title>Are you sure?</v-card-title>
-        <v-card-text
-          >This will reset all payments back to 0 and clear all
-          alerts.</v-card-text
-        >
+        <v-card-text>
+          This will reset all payments back to 0 and clear all
+          alerts.
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text @click="resetDataDialog = false">Cancel</v-btn>
@@ -67,9 +67,14 @@
         <v-card-text>
           <p v-text="manifestVal.description"></p>
           <v-list>
+            <v-list-item @click="aboutDialog = false; supperDeveloperDialog = true">
+              <v-list-item-content>
+                <v-list-item-title>Support developer</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
             <v-list-item href="https://robsoriano.com" target="_BLANK">
               <v-list-item-content>
-                <v-list-item-title>Visit Developer</v-list-item-title>
+                <v-list-item-title>Visit developer website</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
             <v-list-item href="mailto:paytrackr@gmail.com" target="_BLANK">
@@ -84,6 +89,28 @@
               <v-list-item-content>
                 <v-list-item-title>Rate</v-list-item-title>
               </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-- Dialog -->
+    <v-dialog v-model="supperDeveloperDialog">
+      <v-card>
+        <v-card-title>Support Developer</v-card-title>
+        <v-card-text>
+          <p>Thank you for using my extension. I hope you liked it.</p>
+          <p>
+            By agreeing to support me,
+            you will give me a
+            <span class="primary--text">5%</span> chance of getting a payment for every second you are in a Web-Monetized content.
+          </p>
+          <v-list>
+            <v-list-item>
+              <v-list-item-action>
+                <v-switch v-model="agreeSupport"></v-switch>
+              </v-list-item-action>
+              <v-list-item-title>I agree</v-list-item-title>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -136,7 +163,9 @@ export default {
       snackbarText: '',
       aboutDialog: false,
       exportDialog: false,
-      type: 'xlsx'
+      type: 'xlsx',
+      supperDeveloperDialog: false,
+      agreeSupport: false
     };
   },
   async created() {
@@ -217,6 +246,17 @@ export default {
       if (!val) {
         this.email = null;
         this.amount = 0;
+      }
+    },
+    agreeSupport(val) {
+      setRecords('paytrackr_support_developer', val);
+    },
+    async supperDeveloperDialog(val) {
+      if (val) {
+        this.agreeSupport = await getRecords(
+          'paytrackr_support_developer',
+          false
+        );
       }
     }
   },

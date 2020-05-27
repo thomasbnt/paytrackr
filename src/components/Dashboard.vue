@@ -57,10 +57,11 @@
         </v-list-item>
       </template>
     </v-list>
+    <!-- Dialog -->
     <v-dialog v-model="websiteInfoDialog">
       <v-card>
         <v-card-title>
-          Payments per url
+          Payment Summary
           <v-spacer></v-spacer>
           <v-btn icon @click="websiteInfoDialog = false">
             <v-icon>mdi-close</v-icon>
@@ -78,7 +79,14 @@
                   <v-icon>mdi-contactless-payment</v-icon>
                 </v-list-item-avatar>
                 <v-list-item-content>
-                  <v-list-item-title v-text="`${value.total} ${value.assetCode}`"></v-list-item-title>
+                  <v-list-item-title>
+                    {{ value.total }} {{ value.assetCode }}
+                    <br v-if="value.wentToDeveloper" />
+                    <span
+                      class="caption"
+                      v-if="value.wentToDeveloper"
+                    >{{ value.wentToDeveloper }} went to developer</span>
+                  </v-list-item-title>
                   <v-list-item-subtitle>
                     <a :href="name" target="_BLANK" v-text="name"></a>
                   </v-list-item-subtitle>
@@ -221,9 +229,19 @@ export default {
           urlMap[item.url].total = new BigNumber(urlMap[item.url].total, 10)
             .plus(item.scaledAmount)
             .toNumber();
+
+          if (item.toDeveloper) {
+            urlMap[item.url].wentToDeveloper = new BigNumber(
+              urlMap[item.url].wentToDeveloper,
+              10
+            )
+              .plus(item.scaledAmount)
+              .toNumber();
+          }
         } else {
           urlMap[item.url] = {
             total: item.scaledAmount,
+            wentToDeveloper: item.toDeveloper ? item.scaledAmount : 0,
             assetCode: item.assetCode,
             lastUpdate: item.date
           };
