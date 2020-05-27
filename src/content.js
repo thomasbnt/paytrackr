@@ -72,7 +72,7 @@ document.addEventListener('paytrackr_monetizationprogress', async e => {
     url: e.target.URL,
     date: Date.now()
   };
-  console.log(paymentPointer)
+  
   if (config.myPointer === paymentPointer) {
     item.toDeveloper = true;
   }
