@@ -4,7 +4,7 @@
 
 ## Download links
 
-- Chrome: Pending Review
+- Chrome: https://chrome.google.com/webstore/detail/paytrackr/pcfbnmieeijeahdbbjefgkcbkfnccpei
 - Firefox: https://addons.mozilla.org/en-US/firefox/addon/paytrackr/
 
 ## Features
