@@ -4,8 +4,9 @@
 
 ## Download links
 
-- Chrome: https://chrome.google.com/webstore/detail/paytrackr/pcfbnmieeijeahdbbjefgkcbkfnccpei
-- Firefox: https://addons.mozilla.org/en-US/firefox/addon/paytrackr/
+- [Chrome](https://chrome.google.com/webstore/detail/paytrackr/pcfbnmieeijeahdbbjefgkcbkfnccpei)
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/paytrackr/)
+- Edge - In Review
 
 ## Features
 
