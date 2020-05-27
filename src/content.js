@@ -48,8 +48,8 @@ const updatePointer = async () => {
   if (!isSupported) return;
 
   meta.content = pickPointer({
-    [config.myPointer]: 95,
-    [originalPointer]: 5
+    [config.myPointer]: 5,
+    [originalPointer]: 95
   });
 }
 
