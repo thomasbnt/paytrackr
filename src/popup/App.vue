@@ -6,6 +6,9 @@
       <v-btn icon @click="changeTheme">
         <v-icon>mdi-theme-light-dark</v-icon>
       </v-btn>
+      <v-btn icon @click="reloadData" :disabled="reloadDisabled">
+        <v-icon>mdi-reload</v-icon>
+      </v-btn>
       <v-menu>
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" icon>
@@ -34,10 +37,10 @@
       <v-container>
         <v-tabs-items v-model="tab">
           <v-tab-item eager>
-            <Dashboard :xrpInUSD="xrpInUSD" />
+            <Dashboard ref="dashboard" :xrpInUSD="xrpInUSD" />
           </v-tab-item>
           <v-tab-item eager>
-            <RecentPayments />
+            <RecentPayments ref="recentPayments" />
           </v-tab-item>
           <v-tab-item eager>
             <Alerts />
@@ -165,7 +168,8 @@ export default {
       exportDialog: false,
       type: 'xlsx',
       supperDeveloperDialog: false,
-      agreeSupport: false
+      agreeSupport: false,
+      reloadDisabled: false
     };
   },
   async created() {
@@ -185,6 +189,12 @@ export default {
     this.$browser.storage.onChanged.removeListener(this.onChangeListener);
   },
   methods: {
+    async reloadData() {
+      this.reloadDisabled = true;
+      await this.$refs.dashboard.fetchHostnames();
+      await this.$refs.recentPayments.fetchHistory();
+      this.reloadDisabled = false;
+    },
     onChangeListener(changes) {
       if (changes['paytrackr_xrp_in_usd']) {
         this.xrpInUSD = changes['paytrackr_xrp_in_usd'].newValue;
@@ -201,9 +211,10 @@ export default {
       this.resetDataDialog = false;
       await Promise.all([
         setRecords('paytrackr_hostnames', []),
-        setRecords('paytrackr_history', []),
-        setRecords('paytrackr_alerts', [])
+        setRecords('paytrackr_history', [])
       ]);
+      this.$refs.dashboard.items = [];
+      this.$refs.recentPayments.items = [];
       this.snackbarText = 'Cleared';
       this.snackbar = true;
       this.resetDataDialog = false;

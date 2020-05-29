@@ -10,21 +10,17 @@
           </v-list-item-avatar>
 
           <v-list-item-content>
-            <v-list-item-title
-              v-text="`${i.scaledAmount} ${i.assetCode}`"
-            ></v-list-item-title>
+            <v-list-item-title v-text="`${i.scaledAmount} ${i.assetCode}`"></v-list-item-title>
             <v-list-item-subtitle>
               <a target="_BLANK" :href="i.url" v-text="i.url"></a>
             </v-list-item-subtitle>
-            <v-list-item-subtitle>
-              {{ i.date | filterDate }}</v-list-item-subtitle
-            >
+            <v-list-item-subtitle>{{ i.date | filterDate }}</v-list-item-subtitle>
           </v-list-item-content>
 
           <v-list-item-action>
             <v-menu bottom left>
-              <template v-slot:activator="{ on }"
-                ><v-btn v-on="on" icon>
+              <template v-slot:activator="{ on }">
+                <v-btn v-on="on" icon>
                   <v-icon>mdi-dots-vertical</v-icon>
                 </v-btn>
               </template>
@@ -84,26 +80,12 @@ export default {
   }),
   async mounted() {
     this.loading = true;
-    try {
-      this.initialItems = await getRecords('paytrackr_history');
-      this.items = this.paginate(
-        this.initialItems,
-        this.itemsPerPage,
-        this.page
-      );
-
-      if (this.items.length === this.itemsPerPage) {
-        this.page++;
-        this.showLoadMore = true;
-      }
-    } catch (e) {
-      console.log(e);
-    }
+    await this.fetchHistory();
     this.loading = false;
-    this.$browser.storage.onChanged.addListener(this.onChangeListener);
+    // this.$browser.storage.onChanged.addListener(this.onChangeListener);
   },
   beforeDestroy() {
-    this.$browser.storage.onChanged.removeListener(this.onChangeListener);
+    // this.$browser.storage.onChanged.removeListener(this.onChangeListener);
   },
   methods: {
     onChangeListener(changes) {
@@ -136,6 +118,24 @@ export default {
         }
 
         this.items = [...newItems, ...this.items];
+      }
+    },
+    async fetchHistory() {
+      this.page = 1;
+      try {
+        this.initialItems = await getRecords('paytrackr_history');
+        this.items = this.paginate(
+          this.initialItems,
+          this.itemsPerPage,
+          this.page
+        );
+
+        if (this.items.length === this.itemsPerPage) {
+          this.page++;
+          this.showLoadMore = true;
+        }
+      } catch (e) {
+        console.log(e);
       }
     },
     paginate(array, page_size, page_number) {

@@ -132,6 +132,13 @@ export default {
           }
         }
       },
+      animation: {
+        duration: 0
+      },
+      hover: {
+        animationDuration: 0
+      },
+      responsiveAnimationDuration: 0,
       responsive: true,
       maintainAspectRatio: false
     },
@@ -143,21 +150,24 @@ export default {
   }),
   async mounted() {
     this.loading = true;
-    try {
-      this.items = await getRecords('paytrackr_hostnames');
-    } catch (e) {
-      console.log(e);
-    }
+    await this.fetchHostnames();
     this.loading = false;
-    this.$browser.storage.onChanged.addListener(this.onChangeListener);
+    // this.$browser.storage.onChanged.addListener(this.onChangeListener);
   },
   beforeDestroy() {
-    this.$browser.storage.onChanged.removeListener(this.onChangeListener);
+    // this.$browser.storage.onChanged.removeListener(this.onChangeListener);
   },
   methods: {
     onChangeListener(changes) {
       if (changes['paytrackr_hostnames']) {
         this.items = changes['paytrackr_hostnames'].newValue;
+      }
+    },
+    async fetchHostnames() {
+      try {
+        this.items = await getRecords('paytrackr_hostnames');
+      } catch (e) {
+        console.log(e);
       }
     },
     convertCurrency(amount, assetCode, assetScale) {
