@@ -1,11 +1,15 @@
 <template>
   <div>
-    <div v-if="hostnames.length">
+    <div v-if="items.length">
       <v-card flat :loading="loading">
         <v-card-title>
           <span v-text="`${total} ${showInXRP ? 'XRP' : 'USD'}`"></span>
           <v-spacer></v-spacer>
-          <v-btn text @click="showInXRP = !showInXRP">Show in {{ showInXRP ? 'USD' : 'XRP' }}</v-btn>
+          <v-btn
+            v-if="false"
+            text
+            @click="showInXRP = !showInXRP"
+          >Show in {{ showInXRP ? 'USD' : 'XRP' }}</v-btn>
         </v-card-title>
         <v-card-subtitle>Total Payments</v-card-subtitle>
         <v-card-text>
@@ -17,9 +21,9 @@
       <h4>No payments found.</h4>
       <p>Start supporting content creators by visiting their site!</p>
     </tab-placeholder>
-    <v-list three-line subheader v-show="hostnames.length">
+    <v-list three-line subheader v-show="items.length">
       <v-subheader>Websites Visited</v-subheader>
-      <template v-for="(i, idx) in hostnames">
+      <template v-for="(i, idx) in itemsWithCalculatedCurrencies">
         <v-divider inset :key="idx" v-if="idx !== 0"></v-divider>
         <v-list-item :key="i.hostname">
           <v-list-item-avatar>
@@ -31,13 +35,7 @@
           </v-list-item-avatar>
           <v-list-item-content>
             <v-list-item-title v-text="i.hostname"></v-list-item-title>
-            <v-list-item-subtitle
-              v-text="
-                `${convertCurrency(i.total, i.assetCode, i.assetScale)} ${
-                  showInXRP ? 'XRP' : 'USD'
-                }`
-              "
-            ></v-list-item-subtitle>
+            <v-list-item-subtitle v-text="`${i.total} ${showInXRP ? 'XRP' : 'USD' }`"></v-list-item-subtitle>
             <v-list-item-subtitle>
               Last payment:
               {{ i.lastUpdate | filterDate }}
@@ -80,12 +78,12 @@
                 </v-list-item-avatar>
                 <v-list-item-content>
                   <v-list-item-title>
-                    {{ value.total }} {{ value.assetCode }}
+                    {{ value.total }} {{ showInXRP ? 'XRP' : 'USD' }}
                     <br v-if="value.wentToDeveloper" />
                     <span
                       class="caption"
                       v-if="value.wentToDeveloper"
-                    >{{ value.wentToDeveloper }} went to developer</span>
+                    >{{ value.wentToDeveloper }} {{ showInXRP ? 'XRP' : 'USD' }} of this went to developer ❤️</span>
                   </v-list-item-title>
                   <v-list-item-subtitle>
                     <a :href="name" target="_BLANK" v-text="name"></a>
@@ -106,12 +104,12 @@
 
 <script>
 import Doughnut from '../components/Doughnut';
-import { getRecords } from '../utils';
+import { getRecords, getTotalForEachAssetCode } from '../utils';
 import BigNumber from 'bignumber.js';
 BigNumber.config({ DECIMAL_PLACES: 9 });
 
 export default {
-  props: ['xrpInUSD'],
+  props: ['xrpInUSD', 'showInXRP'],
   components: {
     Doughnut
   },
@@ -145,8 +143,7 @@ export default {
     selectedWebsite: {},
     selectedWebsiteUrls: [],
     websiteInfoDialog: false,
-    websiteInfoLoading: false,
-    showInXRP: false
+    websiteInfoLoading: false
   }),
   async mounted() {
     this.loading = true;
@@ -167,94 +164,118 @@ export default {
       try {
         this.items = await getRecords('paytrackr_hostnames');
       } catch (e) {
-        console.log(e);
+        console.log('Fetch hostnames error', e);
       }
-    },
-    convertCurrency(amount, assetCode, assetScale) {
-      let newAmount;
-      if (this.showInXRP && assetCode === 'USD') {
-        newAmount = (amount * (1 / this.xrpInUSD)).toFixed(assetScale);
-      } else if (!this.showInXRP && assetCode === 'XRP') {
-        newAmount = (amount * this.xrpInUSD).toFixed(assetScale);
-      } else {
-        newAmount = amount;
-      }
-
-      return newAmount;
     }
   },
   computed: {
+    itemsWithCalculatedCurrencies() {
+      return getTotalForEachAssetCode(
+        this.items,
+        this.showInXRP,
+        this.xrpInUSD
+      ).sort((a, b) => b.lastUpdate - a.lastUpdate);
+    },
     chartData() {
-      const items = this.items.map(item => {
-        const newObj = {
-          ...item
-        };
-
-        if (this.showInXRP && item.assetCode === 'USD') {
-          newObj.total = (item.total * (1 / this.xrpInUSD)).toFixed(
-            item.assetScale
-          );
-        } else if (!this.showInXRP && item.assetCode === 'XRP') {
-          newObj.total = (item.total * this.xrpInUSD).toFixed(item.assetScale);
-        }
-
-        return newObj;
-      });
-
       return {
-        labels: this.items.map(i => i.hostname),
+        labels: this.itemsWithCalculatedCurrencies.map(i => i.hostname),
         datasets: [
           {
-            data: items.map(i => i.total),
-            backgroundColor: this.items.map(i => i.color)
+            data: this.itemsWithCalculatedCurrencies.map(i => i.total),
+            backgroundColor: this.itemsWithCalculatedCurrencies.map(
+              i => i.color
+            )
           }
         ]
       };
     },
-    hostnames() {
-      return this.items.sort((a, b) => b.lastUpdate - a.lastUpdate);
-    },
     total() {
-      let total = 0;
-      this.items.forEach(item => {
-        if (this.showInXRP && item.assetCode === 'USD') {
-          total = new BigNumber(total, 10)
-            .plus((item.total * (1 / this.xrpInUSD)).toFixed(item.assetScale))
-            .toNumber();
-        } else if (!this.showInXRP && item.assetCode === 'XRP') {
-          total = new BigNumber(total, 10)
-            .plus((item.total * this.xrpInUSD).toFixed(item.assetScale))
-            .toNumber();
-        } else {
-          total = new BigNumber(total, 10).plus(item.total).toNumber();
-        }
-      });
-      return total;
+      return this.itemsWithCalculatedCurrencies
+        .reduce((a, b) => a + b.total, 0)
+        .toFixed(9);
     },
     websiteUrls() {
       let urlMap = {};
       for (var i = 0; i < this.selectedWebsiteUrls.length; i++) {
         const item = this.selectedWebsiteUrls[i];
         if (urlMap[item.url]) {
-          urlMap[item.url].total = new BigNumber(urlMap[item.url].total, 10)
-            .plus(item.scaledAmount)
-            .toNumber();
+          if (this.showInXRP && item.assetCode === 'USD') {
+            const total = (item.scaledAmount * (1 / this.xrpInUSD)).toFixed(
+              item.assetScale
+            );
 
-          if (item.toDeveloper) {
-            urlMap[item.url].wentToDeveloper = new BigNumber(
-              urlMap[item.url].wentToDeveloper,
-              10
-            )
+            urlMap[item.url].total = new BigNumber(urlMap[item.url].total, 10)
+              .plus(total)
+              .toNumber();
+
+            if (item.toDeveloper) {
+              urlMap[item.url].wentToDeveloper = new BigNumber(
+                urlMap[item.url].wentToDeveloper,
+                10
+              )
+                .plus(total)
+                .toNumber();
+            }
+          } else if (!this.showInXRP && item.assetCode === 'XRP') {
+            const total = (item.scaledAmount * this.xrpInUSD).toFixed(
+              item.assetScale
+            );
+
+            urlMap[item.url].total = new BigNumber(urlMap[item.url].total, 10)
+              .plus(total)
+              .toNumber();
+
+            if (item.toDeveloper) {
+              urlMap[item.url].wentToDeveloper = new BigNumber(
+                urlMap[item.url].wentToDeveloper,
+                10
+              )
+                .plus(total)
+                .toNumber();
+            }
+          } else {
+            urlMap[item.url].total = new BigNumber(urlMap[item.url].total, 10)
               .plus(item.scaledAmount)
               .toNumber();
+
+            if (item.toDeveloper) {
+              urlMap[item.url].wentToDeveloper = new BigNumber(
+                urlMap[item.url].wentToDeveloper,
+                10
+              )
+                .plus(item.scaledAmount)
+                .toNumber();
+            }
           }
         } else {
-          urlMap[item.url] = {
-            total: item.scaledAmount,
-            wentToDeveloper: item.toDeveloper ? item.scaledAmount : 0,
-            assetCode: item.assetCode,
-            lastUpdate: item.date
-          };
+          if (this.showInXRP && item.assetCode === 'USD') {
+            const total = (item.scaledAmount * (1 / this.xrpInUSD)).toFixed(
+              item.assetScale
+            );
+            urlMap[item.url] = {
+              total: total,
+              wentToDeveloper: item.toDeveloper ? total : 0,
+              assetCode: item.assetCode,
+              lastUpdate: item.date
+            };
+          } else if (!this.showInXRP && item.assetCode === 'XRP') {
+            const total = (item.scaledAmount * this.xrpInUSD).toFixed(
+              item.assetScale
+            );
+            urlMap[item.url] = {
+              total: total,
+              wentToDeveloper: item.toDeveloper ? item.scaledAmount : 0,
+              assetCode: item.assetCode,
+              lastUpdate: item.date
+            };
+          } else {
+            urlMap[item.url] = {
+              total: item.scaledAmount,
+              wentToDeveloper: item.toDeveloper ? item.scaledAmount : 0,
+              assetCode: item.assetCode,
+              lastUpdate: item.date
+            };
+          }
         }
       }
       return urlMap;

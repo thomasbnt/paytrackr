@@ -4,7 +4,7 @@ import {
   getRandomColor,
   makeid,
   extractHostname,
-  notify,
+  getTotalForEachAssetCode,
 } from "./utils";
 import BigNumber from "bignumber.js";
 BigNumber.config({ DECIMAL_PLACES: 9 });
@@ -88,43 +88,48 @@ document.addEventListener("paytrackr_monetizationprogress", async (e) => {
   const hostnameIndex = hostnames.findIndex((i) => i.hostname === hostname);
 
   if (hostnameIndex !== -1) {
-    const totalAmount = new BigNumber(hostnames[hostnameIndex].total, 10)
-      .plus(newScaledAmount)
-      .toNumber();
-    hostnames[hostnameIndex].total = totalAmount;
+    const assetCodeIndex = hostnames[hostnameIndex].currencies.findIndex((i) =>
+      i.assetCode === assetCode
+    );
+    if (assetCodeIndex !== -1) {
+      const currentTotal =
+        hostnames[hostnameIndex].currencies[assetCodeIndex].total;
+      const totalAmount = new BigNumber(currentTotal, 10)
+        .plus(newScaledAmount)
+        .toNumber();
+      hostnames[hostnameIndex].currencies[assetCodeIndex].total = totalAmount;
+    } else {
+      hostnames[hostnameIndex].currencies.push({
+        assetCode,
+        assetScale,
+        total: newScaledAmount,
+      });
+    }
     hostnames[hostnameIndex].lastUpdate = Date.now();
   } else {
     hostnames.push({
       hostname,
-      assetScale,
-      assetCode,
-      total: newScaledAmount,
       lastUpdate: Date.now(),
       color: getRandomColor(),
+      currencies: [{
+        assetCode,
+        assetScale,
+        total: newScaledAmount,
+      }],
     });
   }
 
   setRecords("paytrackr_hostnames", hostnames);
-
-  let currentTotal = 0;
-  hostnames.forEach((host) => {
-    if (host.assetCode === "XRP") {
-      currentTotal = new BigNumber(currentTotal, 10)
-        .plus((host.total * XRPPriceInUSD).toFixed(6))
-        .toNumber();
-    } else {
-      currentTotal = new BigNumber(currentTotal, 10)
-        .plus(host.total)
-        .toNumber();
-    }
-  });
+  
+  const currentTotal = getTotalForEachAssetCode(hostnames, false, XRPPriceInUSD).reduce((a, b) => a + b.total, 0);
 
   const activeAlerts = alerts.filter((i) => !i.done);
+
   activeAlerts.forEach((alert) => {
     if (currentTotal >= alert.amount) {
       const alertIdx = alerts.findIndex((i) => i.date === alert.date);
       alerts[alertIdx].done = true;
-      notify("PayTrackr", `You've paid a total of $${alert.amount}!`);
+      browser.runtime.sendMessage(`You've paid a total of $${alert.amount}!`);
     }
   });
   setRecords("paytrackr_alerts", alerts);

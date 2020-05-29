@@ -1,4 +1,4 @@
-import { setRecords, getXRPinUSD } from "./utils";
+import { setRecords, getXRPinUSD, notify } from "./utils";
 import browser from "webextension-polyfill";
 
 let XRPPriceInUSD;
@@ -25,5 +25,8 @@ browser.runtime.onMessage.addListener((msg) => {
     browser.browserAction.setBadgeText({ text: "$" });
   } else if (msg === "paytrackr_monetizationstop") {
     browser.browserAction.setBadgeText({ text: "" });
+  } else if (msg.includes(`You've paid a total`)) {
+    console.log(msg);
+    notify('PayTrackr', msg);
   }
 });

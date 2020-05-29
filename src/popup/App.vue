@@ -3,9 +3,6 @@
     <v-app-bar app>
       <v-toolbar-title>PayTrackr</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn icon @click="changeTheme">
-        <v-icon>mdi-theme-light-dark</v-icon>
-      </v-btn>
       <v-btn icon @click="reloadData" :disabled="reloadDisabled">
         <v-icon>mdi-reload</v-icon>
       </v-btn>
@@ -22,6 +19,9 @@
           <v-list-item @click="exportDialog = true">
             <v-list-item-title>Export History</v-list-item-title>
           </v-list-item>
+          <v-list-item @click="optionsDialog = true">
+            <v-list-item-title>Options</v-list-item-title>
+          </v-list-item>
           <v-list-item @click="aboutDialog = true">
             <v-list-item-title>About PayTrackr</v-list-item-title>
           </v-list-item>
@@ -37,7 +37,7 @@
       <v-container>
         <v-tabs-items v-model="tab">
           <v-tab-item eager>
-            <Dashboard ref="dashboard" :xrpInUSD="xrpInUSD" />
+            <Dashboard ref="dashboard" :showInXRP="showPaymentsInXRP" :xrpInUSD="xrpInUSD" />
           </v-tab-item>
           <v-tab-item eager>
             <RecentPayments ref="recentPayments" />
@@ -85,14 +85,14 @@
                 <v-list-item-title>Report an issue</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
-            <v-list-item
+            <!-- <v-list-item
               href="https://chrome.google.com/webstore/detail/paytrackr/jmkofipfojjlklmjpedfiokppaojkoel"
               target="_BLANK"
             >
               <v-list-item-content>
                 <v-list-item-title>Rate</v-list-item-title>
               </v-list-item-content>
-            </v-list-item>
+            </v-list-item>-->
           </v-list>
         </v-card-text>
       </v-card>
@@ -108,14 +108,7 @@
             you will give me a
             <span class="primary--text">5%</span> chance of getting a payment for every second you are in a Web-Monetized content.
           </p>
-          <v-list>
-            <v-list-item>
-              <v-list-item-action>
-                <v-switch v-model="agreeSupport"></v-switch>
-              </v-list-item-action>
-              <v-list-item-title>I agree</v-list-item-title>
-            </v-list-item>
-          </v-list>
+          <v-checkbox v-model="agreeSupport" label="I agree"></v-checkbox>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -133,6 +126,28 @@
           <v-spacer></v-spacer>
           <v-btn text @click="exportData">Export</v-btn>
         </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- Dialog -->
+    <v-dialog v-model="optionsDialog">
+      <v-card>
+        <v-card-title>Options</v-card-title>
+        <v-card-text>
+          <v-list>
+            <v-list-item>
+              <v-list-item-action>
+                <v-switch v-model="showPaymentsInXRP"></v-switch>
+              </v-list-item-action>
+              <v-list-item-title>Show payments in XRP</v-list-item-title>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-action>
+                <v-switch v-model="$vuetify.theme.dark"></v-switch>
+              </v-list-item-action>
+              <v-list-item-title>Dark mode</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
       </v-card>
     </v-dialog>
     <!-- Snackbar -->
@@ -169,18 +184,22 @@ export default {
       type: 'xlsx',
       supperDeveloperDialog: false,
       agreeSupport: false,
-      reloadDisabled: false
+      reloadDisabled: false,
+      optionsDialog: false,
+      showPaymentsInXRP: false
     };
   },
   async created() {
     this.$vuetify.theme.dark = true;
-    const [theme, price] = await Promise.all([
+    const [theme, price, format] = await Promise.all([
       getRecords('paytrackr_theme', 'dark'),
-      getRecords('paytrackr_xrp_in_usd')
+      getRecords('paytrackr_xrp_in_usd'),
+      getRecords('paytrackr_format', 'USD')
     ]);
     if (theme !== 'dark') {
       this.$vuetify.theme.dark = false;
     }
+    this.showPaymentsInXRP = format === 'XRP';
     this.xrpInUSD = price;
 
     this.$browser.storage.onChanged.addListener(this.onChangeListener);
@@ -199,13 +218,6 @@ export default {
       if (changes['paytrackr_xrp_in_usd']) {
         this.xrpInUSD = changes['paytrackr_xrp_in_usd'].newValue;
       }
-    },
-    async changeTheme() {
-      this.$vuetify.theme.dark = !this.$vuetify.theme.dark;
-      await setRecords(
-        'paytrackr_theme',
-        this.$vuetify.theme.dark ? 'dark' : 'light'
-      );
     },
     async resetData() {
       this.resetDataDialog = false;
@@ -261,6 +273,12 @@ export default {
     },
     agreeSupport(val) {
       setRecords('paytrackr_support_developer', val);
+    },
+    showPaymentsInXRP(val) {
+      setRecords('paytrackr_format', val ? 'XRP' : 'USD');
+    },
+    async '$vuetify.theme.dark'(val) {
+      await setRecords('paytrackr_theme', val ? 'dark' : 'light');
     },
     async supperDeveloperDialog(val) {
       if (val) {
